@@ -3,13 +3,51 @@
 ' Marco Hartung, 08.12.2020
 
 ' "WshShell.Run strScript, 0" 0 = hide window, 1 = show window (useful for debugging)
-'Option Explicit
+Option Explicit
 
-call WaitForNetwork
+Dim localHost
+Dim iNetHost
+Dim iNetOk
+Dim localNetOk
+Dim i
 
-'private net or did we ned a vpn
+localHost = "192.168.2.5"
+iNetHost = "google.de"
+
+' Wait for Network
+For i = 0 to 2
+	iNetOk = Ping( iNetHost )
+	localNetOk = Ping( localHost  )
+  
+	If iNetOk = true Then
+		Exit For
+	End If
+Next
+	
+wscript.echo "localNetOk: " & localNetOk
+wscript.echo "iNeT: " & iNetOK
+
+' Should we launch VPN
+IF (iNetOk = true) AND (localNetOk = false) Then
+
+	ReConnectVPN WshShell, strPassword
+
+	For i = 0 to 20
+		iNetOk = Ping( localHost )
+		If iNetOk = true Then
+			Exit For
+		End If
+	Next
+
+	IF localNet = false Then
+		wscript.echo "No connection to local net: " & localHost
+	End If
+End If
 
 ' fix broken NetShares
+'Dim objNetwork
+'Set objNetwork = CreateObject("WScript.Network")
+'objNetwork.MapNetworkDrive "Z:", "\\server\path", false, "user", "password"
 
 ' run tools
 
@@ -17,56 +55,43 @@ wscript.echo "Finished!"
 
 ' -------------------------- functions  --------------------------
 
-Sub WaitForNetwork( )
-On Error Resume Next 
- 
-strComputer = "." 
-Set objWMIService = GetObject("winmgmts:" _ 
-    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2") 
- 
-Set colItems = objWMIService.ExecQuery("Select * from Win32_NetworkAdapter") 
- 
-For Each objItem in colItems 
-    Wscript.Echo "Adapter Type: " & objItem.AdapterType 
-  
-    Select Case objItem.AdapterTypeID 
-        Case 0 strAdapterType = "Ethernet 802.3"  
-        Case 1 strAdapterType = "Token Ring 802.5"  
-        Case 2 strAdapterType = "Fiber Distributed Data Interface (FDDI)"  
-        Case 3 strAdapterType = "Wide Area Network (WAN)"  
-        Case 4 strAdapterType = "LocalTalk"  
-        Case 5 strAdapterType = "Ethernet using DIX header format"  
-        Case 6 strAdapterType = "ARCNET"  
-        Case 7 strAdapterType = "ARCNET (878.2)"  
-        Case 8 strAdapterType = "ATM"  
-        Case 9 strAdapterType = "Wireless"  
-        Case 10 strAdapterType = "Infrared Wireless"  
-        Case 11 strAdapterType = "Bpc"  
-        Case 12 strAdapterType = "CoWan"  
-        Case 13 strAdapterType = "1394" 
-    End Select 
-  
-    Wscript.Echo "Adapter Type Id: " & strAdapterType 
-    Wscript.Echo "AutoSense: " & objItem.AutoSense 
-    Wscript.Echo "Description: " & objItem.Description 
-    Wscript.Echo "Device ID: " & objItem.DeviceID 
-    Wscript.Echo "Index: " & objItem.Index 
-    Wscript.Echo "MAC Address: " & objItem.MACAddress 
-    Wscript.Echo "Manufacturer: " & objItem.Manufacturer 
-    Wscript.Echo "Maximum Number Controlled: " & objItem.MaxNumberControlled 
-    Wscript.Echo "Maximum Speed: " & objItem.MaxSpeed 
-    Wscript.Echo "Name: " & objItem.Name 
-    Wscript.Echo "Net Connection ID: " & objItem.NetConnectionID 
-    Wscript.Echo "Net Connection Status: " & objItem.NetConnectionStatus 
-    For Each strNetworkAddress in objItem.NetworkAddresses 
-        Wscript.Echo "NetworkAddress: " & strNetworkAddress 
-    Next 
-    Wscript.Echo "Permanent Address: " & objItem.PermanentAddress 
-    Wscript.Echo "PNP Device ID: " & objItem.PNPDeviceID 
-    Wscript.Echo "Product Name: " & objItem.ProductName 
-    Wscript.Echo "Service Name: " & objItem.ServiceName 
-    Wscript.Echo "Speed: " & objItem.Speed 
-Next 
+Function Ping( host )
+	Dim result
+	Dim shell, shellexec
 
+	Set shell = WScript.CreateObject("WScript.Shell")
+	Set shellexec = shell.Exec("ping -n 1 -w 2000 -4 " & host) 
+	result = shellexec.StdOut.ReadAll
 
+	wscript.echo result
+
+	If InStr(result , "TTL") Then
+	  Ping = true 
+	Else
+	  Ping = false
+	End If
+
+End Function
+
+Sub ReConnectVPN(WshShell, strPassword)
+	WshShell.Run """%PROGRAMFILES(x86)%\Cisco\Cisco AnyConnect Secure Mobility Client\vpnui.exe"""
+
+	WScript.Sleep 1000
+
+	WshShell.AppActivate "Cisco AnyConnect Secure Mobility Client"
+
+	WshShell.SendKeys "{TAB}"
+	WshShell.SendKeys "{TAB}"
+	WshShell.SendKeys "{ENTER}"
+
+	WScript.Sleep 4000
+
+	WshShell.SendKeys strPassword
+	WshShell.SendKeys "{TAB}"
+	WshShell.SendKeys "{ENTER}"
+
+	WScript.Sleep 4000
+
+	WshShell.SendKeys "{ENTER}"
 End Sub
+
