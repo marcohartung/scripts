@@ -102,11 +102,20 @@ wscript.Quit 0
 
 Function Ping( host )
 	Dim result
-	Dim shell, shellexec
-
-	Set shell = WScript.CreateObject("WScript.Shell")
-	Set shellexec = shell.Exec("ping -n 1 -w 2000 -4 " & host) 
-	result = shellexec.StdOut.ReadAll
+	Dim tmpFile
+	Const TemporaryFolder = 2
+	
+	With CreateObject("Scripting.FileSystemObject")
+		tmpFile = .BuildPath(.GetSpecialFolder(TemporaryFolder),  .GetTempName )
+	End With
+	
+	With CreateObject("WScript.Shell")
+		.Run "cmd /c ping -n 1 -w 2000 -4 " & host & " > " & tmpFile, 0, True
+	End With
+	With CreateObject("Scripting.FileSystemObject")
+		result = .OpenTextFile(tmpFile).ReadAll()
+		.DeleteFile tmpFile
+	End With
 	'wscript.echo result
 
 	If InStr(result , "TTL") Then
