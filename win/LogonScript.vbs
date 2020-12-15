@@ -127,10 +127,11 @@ Function Ping( host )
 End Function
 
 Sub ShowVPN()
-	Set wsShell = CreateObject("WScript.Shell")
-	wsShell.Run """%PROGRAMFILES(x86)%\Cisco\Cisco AnyConnect Secure Mobility Client\vpnui.exe"""
-	wscript.Sleep 300
-	wsShell.AppActivate "Cisco AnyConnect Secure Mobility Client"
+	With CreateObject("WScript.Shell")
+		.Run """%PROGRAMFILES(x86)%\Cisco\Cisco AnyConnect Secure Mobility Client\vpnui.exe"""
+		wscript.Sleep 300
+		.AppActivate "Cisco AnyConnect Secure Mobility Client"
+	End With
 End Sub
 
 Sub LaunchTools( strTools )
