@@ -6,7 +6,6 @@
 'This work is licensed under the Creative Commons Attribution 4.0 International License.
 'To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
-' "WshShell.Run strScript, 0" 0 = hide window, 1 = show window (useful for debugging)
 Option Explicit
 
 Dim fso, sFolder, fsoOutFile, strOutFile, fsoFolder
@@ -18,7 +17,7 @@ MaxDepth = 2
 Set fso = CreateObject( "Scripting.FileSystemObject" )
 
 sFolder = Wscript.Arguments.Item(0)
- 'sFolder = "C:\Temp"
+'sFolder = "C:\Temp"
 If sFolder = "" Then
   Wscript.Echo "No Folder parameter was passed"
   Wscript.Quit
@@ -40,14 +39,14 @@ wscript.echo "Finished!"
 ' -------------------------- functions  --------------------------
 
 Sub PrintFoldersizeR( fsoFolder,  fsoOutFile )
-	Dim fold, sEntry
+	Dim fold, sEntry, i
+	Dim subfolderList, subfolderDict
 	
 	If( ActualDepth > MaxDepth) Then
 		Exit Sub
 	End If
 	ActualDepth = ActualDepth + 1
 	
-
 	sEntry = _ 
 		fsoFolder.Path & _
 		vbTab & _
@@ -56,10 +55,23 @@ Sub PrintFoldersizeR( fsoFolder,  fsoOutFile )
 	
 	fsoOutFile.WriteLine sEntry 
 	
+	Set subfolderDict = CreateObject("Scripting.Dictionary")
+	Set subfolderList = CreateObject("System.Collections.ArrayList")
 	For Each fold in fsoFolder.SubFolders
-		PrintFoldersizeR fold, fsoOutFile
+		subfolderDict.Add fold.Size, fold
+	Next
+	
+	Dim key
+	For Each key In subfolderDict.Keys
+	    subfolderList.Add key
+	Next
+	
+	subfolderList.Sort
+	subfolderList.Reverse
+		
+	For Each key in subfolderList
+		PrintFoldersizeR subfolderDict(key), fsoOutFile
 	Next
 	
 	ActualDepth = ActualDepth - 1
-
 End Sub
