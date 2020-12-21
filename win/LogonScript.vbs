@@ -36,9 +36,11 @@ ToolsLaunch_PreNetwork(0,2) = "1"
 
 'ToolsLaunch_PreVPN(0,0) = "Path to exe"
 'ToolsLaunch_PreVPN(0,1) = "ARgs"
+'ToolsLaunch_PreVPN(0,2) = "1"
 
 'ToolsLaunch_PostVPN(0,0) = "Path to exe"
 'ToolsLaunch_PostVPN(0,1) = "ARgs"
+'ToolsLaunch_PostVPN(0,2) = "1"
 
 'NetworkShares(0,0) = "T:"
 'NetworkShares(0,1) = "\\192.168.2.1\user"
@@ -64,8 +66,11 @@ Next
 'wscript.echo "iNeT: " & iNetOK & " - localNetOk: " & localNetOk
 
 ' Exit here if we have not network
-IF iNetOk = false Then
-	wscript.echo "No connection to: " & iNetHost & vbNewLine & "Propaply no network connection!" & vbNewLine &  "Quit LogonScript"
+IF (iNetOk = false) AND (localNetOk = false) Then
+	wscript.echo "No connection to: " & iNetHost & vbNewLine &_
+		"No connection to: " & localHost & vbNewLine &_
+		"Propaply no network connection!" & vbNewLine &_
+		"Quit LogonScript"
 	wscript.Quit -1
 End If
 
@@ -94,7 +99,7 @@ End If
 AddNetworkShares NetworkShares
 
 ' Launch tools (full network)
-LaunchTools ToolsLaunch_PreVPN 
+LaunchTools ToolsLaunch_PostVPN
 
 wscript.Quit 0
 
