@@ -59,7 +59,7 @@ For i = 0 to 20
 	iNetOk = Ping( iNetHost )
 	localNetOk = Ping( localHost  )
   
-	If iNetOk = true Then
+	If (iNetOk = true) OR (localNetOk = true) Then
 		Exit For
 	End If
 Next	
